@@ -1,6 +1,5 @@
 import { IContainer } from '@power-cms/common/application';
 import { Id } from '@power-cms/common/domain';
-import MongoMemoryServer from 'mongodb-memory-server';
 import { Db } from 'mongodb';
 import { UserNotFoundException } from '../../domain/exception/user-not-found.exception';
 import { createContainer } from '../../infrastructure/awilix.container';
@@ -18,14 +17,8 @@ const properData = {
 
 describe('Get by login action', () => {
   let container: IContainer;
-  let mongo: MongoMemoryServer;
 
   beforeAll(async () => {
-    mongo = new MongoMemoryServer();
-    process.env.DB_HOST = 'localhost';
-    process.env.DB_PORT = String(await mongo.getPort());
-    process.env.DB_DATABASE = await mongo.getDbName();
-
     container = await createContainer();
   });
 

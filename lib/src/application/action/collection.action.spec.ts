@@ -1,7 +1,6 @@
 import { IContainer, IPaginationView, IRemoteProcedure } from '@power-cms/common/application';
 import { Id } from '@power-cms/common/domain';
 import { Db } from 'mongodb';
-import MongoMemoryServer from 'mongodb-memory-server';
 import { createContainer } from '../../infrastructure/awilix.container';
 import { UserView } from '../query/user.view';
 import { CollectionAction } from './collection.action';
@@ -19,16 +18,11 @@ const properData = {
 
 describe('Collection action', () => {
   let container: IContainer;
-  let mongo: MongoMemoryServer;
   let id: string;
   let remoteProcedure: IRemoteProcedure;
 
   beforeAll(async () => {
-    mongo = new MongoMemoryServer();
     remoteProcedure = new RemoteProcedureMock();
-    process.env.DB_HOST = 'localhost';
-    process.env.DB_PORT = String(await mongo.getPort());
-    process.env.DB_DATABASE = await mongo.getDbName();
 
     container = await createContainer(undefined, remoteProcedure);
   });
@@ -51,7 +45,7 @@ describe('Collection action', () => {
   it('Calls authorize action if id not matching', async () => {
     const action = container.resolve<CollectionAction>('userCollectionAction');
 
-    await action.authorize({ auth: { id: id.toString() }, data: {} });
+    await action.authorize({ auth: { id }, data: {} });
     expect(remoteProcedure.call).toBeCalled();
   });
 });
