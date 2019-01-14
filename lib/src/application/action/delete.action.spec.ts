@@ -1,7 +1,6 @@
 import { IContainer, IRemoteProcedure } from '@power-cms/common/application';
 import { Id } from '@power-cms/common/domain';
 import { Db } from 'mongodb';
-import MongoMemoryServer from 'mongodb-memory-server';
 import { UserNotFoundException } from '../../domain/exception/user-not-found.exception';
 import { createContainer } from '../../infrastructure/awilix.container';
 import { DeleteAction } from './delete.action';
@@ -19,32 +18,27 @@ const properData = {
 
 describe('Delete action', () => {
   let container: IContainer;
-  let mongo: MongoMemoryServer;
   let id: string;
   let remoteProcedure: IRemoteProcedure;
 
   beforeAll(async () => {
-    mongo = new MongoMemoryServer();
     remoteProcedure = new RemoteProcedureMock();
-    process.env.DB_HOST = 'localhost';
-    process.env.DB_PORT = String(await mongo.getPort());
-    process.env.DB_DATABASE = await mongo.getDbName();
 
     container = await createContainer(undefined, remoteProcedure);
   });
 
   beforeEach(async () => {
     (await container.resolve<Db>('db')).dropDatabase();
-    const user = await container.resolve<CreateAction>('userCreateAction').handle({ data: properData });
+    const user = await container.resolve<CreateAction>('userCreateAction').execute({ data: properData });
     id = user.id;
   });
 
   it('Deletes single user', async () => {
     const action = container.resolve<DeleteAction>('userDeleteAction');
-    await action.handle({ params: { id: id.toString() } });
+    await action.execute({ params: { id } });
 
     const readAction = container.resolve<ReadAction>('userReadAction');
-    const handler = readAction.handle({ params: { id: Id.generate().toString() } });
+    const handler = readAction.execute({ params: { id: Id.generate().toString() } });
 
     await expect(handler).rejects.toThrowError(UserNotFoundException);
   });
@@ -52,7 +46,7 @@ describe('Delete action', () => {
   it('Calls authorize action if id not matching', async () => {
     const action = container.resolve<DeleteAction>('userDeleteAction');
 
-    await action.authorize({ auth: { id: id.toString() }, data: {} });
+    await action.authorize({ auth: { id }, data: {} });
     expect(remoteProcedure.call).toBeCalled();
   });
 });

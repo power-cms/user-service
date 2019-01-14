@@ -1,6 +1,15 @@
-import { Acl, IActionHandler, IContainer, ILogger, IRemoteProcedure, IService } from '@power-cms/common/application';
+import {
+  Acl,
+  CommandHandlerLogger,
+  IActionHandler,
+  IContainer,
+  ILogger,
+  IRemoteProcedure,
+  IService,
+} from '@power-cms/common/application';
 import {
   createDatabaseConnection,
+  getDecorator,
   MongodbPaginator,
   NullLogger,
   NullRemoteProcedure,
@@ -28,33 +37,35 @@ export const createContainer = (logger?: ILogger, remoteProcedure?: IRemoteProce
     injectionMode: awilix.InjectionMode.CLASSIC,
   });
 
+  const decorator = getDecorator(container);
+
   container.register({
     logger: awilix.asValue<ILogger>(logger || new NullLogger()),
     remoteProcedure: awilix.asValue<IRemoteProcedure>(remoteProcedure || new NullRemoteProcedure()),
-    acl: awilix.asClass<Acl>(Acl),
+    acl: awilix.asClass<Acl>(Acl).singleton(),
 
     db: awilix.asValue<Promise<Db>>(createDatabaseConnection()),
 
-    paginator: awilix.asClass(MongodbPaginator),
+    paginator: awilix.asClass(MongodbPaginator).singleton(),
 
-    userRepository: awilix.asClass<IUserRepository>(MongodbUsers),
-    userQuery: awilix.asClass<IUserQuery>(MongodbUsers),
+    userRepository: awilix.asClass<IUserRepository>(MongodbUsers).singleton(),
+    userQuery: awilix.asClass<IUserQuery>(MongodbUsers).singleton(),
 
-    createUserHandler: awilix.asClass<CreateUserCommandHandler>(CreateUserCommandHandler),
-    updateUserHandler: awilix.asClass<UpdateUserCommandHandler>(UpdateUserCommandHandler),
-    deleteUserHandler: awilix.asClass<DeleteUserCommandHandler>(DeleteUserCommandHandler),
-    grantRolesHandler: awilix.asClass<GrantRolesCommandHandler>(GrantRolesCommandHandler),
+    userCreateAction: awilix.asClass<CreateAction>(CreateAction).singleton(),
+    userReadAction: awilix.asClass<ReadAction>(ReadAction).singleton(),
+    userUpdateAction: awilix.asClass<UpdateAction>(UpdateAction).singleton(),
+    userDeleteAction: awilix.asClass<DeleteAction>(DeleteAction).singleton(),
+    userCollectionAction: awilix.asClass<CollectionAction>(CollectionAction).singleton(),
+    userGetByLoginAction: awilix.asClass<GetByLoginAction>(GetByLoginAction).singleton(),
+    userGrantRolesAction: awilix.asClass<GrantRolesAction>(GrantRolesAction).singleton(),
 
-    userCreateAction: awilix.asClass<CreateAction>(CreateAction),
-    userReadAction: awilix.asClass<ReadAction>(ReadAction),
-    userUpdateAction: awilix.asClass<UpdateAction>(UpdateAction),
-    userDeleteAction: awilix.asClass<DeleteAction>(DeleteAction),
-    userCollectionAction: awilix.asClass<CollectionAction>(CollectionAction),
-    userGetByLoginAction: awilix.asClass<GetByLoginAction>(GetByLoginAction),
-    userGrantRolesAction: awilix.asClass<GrantRolesAction>(GrantRolesAction),
-
-    service: awilix.asClass<IService>(UserService),
+    service: awilix.asClass<IService>(UserService).singleton(),
   });
+
+  decorator.decorate('createUserHandler', CreateUserCommandHandler, CommandHandlerLogger);
+  decorator.decorate('updateUserHandler', UpdateUserCommandHandler, CommandHandlerLogger);
+  decorator.decorate('deleteUserHandler', DeleteUserCommandHandler, CommandHandlerLogger);
+  decorator.decorate('grantRolesHandler', GrantRolesCommandHandler, CommandHandlerLogger);
 
   container.register({
     actions: awilix.asValue<IActionHandler[]>([

@@ -1,7 +1,6 @@
 import { IContainer } from '@power-cms/common/application';
 import { validate } from '@power-cms/common/infrastructure';
 import { Db } from 'mongodb';
-import MongoMemoryServer from 'mongodb-memory-server';
 import { createContainer } from '../../infrastructure/awilix.container';
 import { UserView } from '../query/user.view';
 import { CreateAction } from './create.action';
@@ -14,14 +13,8 @@ const properData = {
 
 describe('Create action', () => {
   let container: IContainer;
-  let mongo: MongoMemoryServer;
 
   beforeAll(async () => {
-    mongo = new MongoMemoryServer();
-    process.env.DB_HOST = 'localhost';
-    process.env.DB_PORT = String(await mongo.getPort());
-    process.env.DB_DATABASE = await mongo.getDbName();
-
     container = await createContainer();
   });
 
@@ -31,7 +24,7 @@ describe('Create action', () => {
 
   it('Creates user', async () => {
     const action = container.resolve<CreateAction>('userCreateAction');
-    const { id, ...result }: UserView = await action.handle({ data: properData });
+    const { id, ...result }: UserView = await action.execute({ data: properData });
 
     expect(result).toEqual({ avatar: null, roles: [], ...properData });
     expect(id).toBeDefined();

@@ -1,6 +1,5 @@
 import { IContainer } from '@power-cms/common/application';
 import { Db } from 'mongodb';
-import MongoMemoryServer from 'mongodb-memory-server';
 import { createContainer } from '../../infrastructure/awilix.container';
 import { UserView } from '../query/user.view';
 import { CreateAction } from './create.action';
@@ -17,32 +16,26 @@ const rolesData = {
 
 describe('Grant roles action', () => {
   let container: IContainer;
-  let mongo: MongoMemoryServer;
   let id: string;
 
   beforeAll(async () => {
-    mongo = new MongoMemoryServer();
-    process.env.DB_HOST = 'localhost';
-    process.env.DB_PORT = String(await mongo.getPort());
-    process.env.DB_DATABASE = await mongo.getDbName();
-
     container = await createContainer();
   });
 
   beforeEach(async () => {
     (await container.resolve<Db>('db')).dropDatabase();
-    const user = await container.resolve<CreateAction>('userCreateAction').handle({ data: properData });
+    const user = await container.resolve<CreateAction>('userCreateAction').execute({ data: properData });
     id = user.id;
   });
 
   it('Grants user admin role', async () => {
     const action = container.resolve<GrantRolesAction>('userGrantRolesAction');
-    const result: UserView = await action.handle({ data: rolesData, params: { id: id.toString() } });
+    const result: UserView = await action.execute({ data: rolesData, params: { id } });
 
     expect(JSON.parse(JSON.stringify(result))).toEqual({
       ...properData,
       ...rolesData,
-      id: id.toString(),
+      id,
       avatar: null,
     });
   });

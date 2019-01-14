@@ -1,5 +1,8 @@
-# :rocket: PowerCms - User service
+![PowerCms](docs/logo-small.png)
 
+# PowerCMS - User service
+
+[![NPM Version](https://img.shields.io/npm/v/@power-cms/user-service.svg)](https://www.npmjs.com/package/@power-cms/user-service)
 [![Build Status](https://travis-ci.com/power-cms/user-service.svg?branch=master)](https://travis-ci.com/power-cms/user-service)
 [![Coverage Status](https://coveralls.io/repos/github/power-cms/user-service/badge.svg)](https://coveralls.io/github/power-cms/user-service)
 
